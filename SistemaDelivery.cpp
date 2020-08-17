@@ -181,9 +181,11 @@ void seguirProcedimiento(Rubro rubro[], int &cont, int codZona){
                         lim++;
                         cont++;
                     }
-                    cout<<"Nombre Comercio: "<<endl;
-                    fflush(stdin);
-                    gets(nombreComercio);
+                    if(i<10-cantComercios){
+                        cout<<"Nombre Comercio: "<<endl;
+                        fflush(stdin);
+                        gets(nombreComercio);
+                    }
                 }
         }else{
             cout<<"Cantidad de comercios ya alcanzada (10) en la zona: "<<codZona<<endl;

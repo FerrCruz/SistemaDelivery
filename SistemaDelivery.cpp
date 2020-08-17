@@ -24,67 +24,49 @@ generados
 
 using namespace std;
 
-struct Heladeria{
+struct Rubro{
     char nombreComercio[30];
     int codZona;
-}regheladeria;
-
-struct Pizzeria{
-    char nombreComercio[30];
-    unsigned codZona;
-}regpizzeria;
-
-struct Bebida{
-    char nombreComercio[30];
-    unsigned codZona;
-}regbebida;
-
-struct Parrilla{
-    char nombreComercio[30];
-    unsigned codZona;
-}regparrilla;
+}regrubro;
 
 int mostrarMenuRubro();
+int contarComercios(Rubro rubro[]);
 int mostrarMenuZonas();
-void limpiar(Heladeria comercioHela[],Pizzeria comercioPizz[],Bebida comercioBebi[], Parrilla comercioParr[]);
-void mostrarRubro(Heladeria comercioHela[],int codZona,int lim);
-//-------Funcion de la consigna 2)------------
-void informarPorZonaComercios(Heladeria comercioHela[],Pizzeria comercioPizz[],Bebida comercioBebi[],Parrilla comercioParr[]);
-//-------Funcion de la consigna 3)------------
-void informarRubrosSinComercios(Heladeria comercioHela[],Pizzeria comercioPizz[],Bebida comercioBebi[],Parrilla comercioParr[]);
-//--------------------------------------------
-int verificarCantComerPorZonaH(int codZona,Heladeria comercioHela[]);
-int verificarCantComerPorZonaPi(int codZona,Pizzeria comercioPizz[]);
-int verificarCantComerPorZonaBeb(int codZona,Bebida comercioBebida[]);
-int verificarCantComerPorZonaParr(int codZona,Parrilla comercioParrilla[]);
-void agregarComercioHeladeria(Heladeria comercioHela[],FILE*hel);
-void agregarComercioPizzeria(Pizzeria comercioPizz[],FILE*pizz);
-void agregarComercioBebida(Bebida comercioBebi[],FILE*beb);
-void agregarComercioParrilla(Parrilla comercioParr[],FILE*parr);
-void generarAccion(int opc,Heladeria comercioHela[],FILE*hel,Pizzeria comercioPizz[],FILE*pizz,Bebida comercioBebi[],FILE*beb,Parrilla comercioParr[],FILE*parr);
+int verificarNum(int min, int max);
+void limpiar(Rubro comercioHela[],Rubro comercioPizz[],Rubro comercioBebi[], Rubro comercioParr[]);
+//-------Funcion de la consigna 1)----------------------
+void agregarComerciosArchivos(Rubro comercioHela[],int contH,Rubro comercioPizz[],int contPizz,Rubro comercioBebi[],int contBeb,Rubro comercioParr[],int contParr);
+//-------Funcion de la consigna 2)----------------------
+void informarPorZonaComercios(Rubro comercioHela[],Rubro comercioPizz[],Rubro comercioBebi[],Rubro comercioParr[]);
+int contarComerciosPorZona(Rubro rubro[],int zona);
+//-------Funcion de la consigna 3)----------------------
+void informarRubrosSinComercios(Rubro comercioHela[],Rubro comercioPizz[],Rubro comercioBebi[],Rubro comercioParr[]);
+//------------------------------------------------------
+int verificarCantComerPorZona(int codZona,Rubro comercioHela[]);
+void agregarComercioHeladeria(Rubro comercioHela[],int &contH);
+void agregarComercioPizzeria(Rubro comercioPizz[],int &contPizz);
+void agregarComercioBebida(Rubro comercioBebi[],int &contBeb);
+void agregarComercioParrilla(Rubro comercioParr[],int &contParr);
+void generarAccion(int opc,Rubro comercioHela[] ,Rubro comercioPizz[] ,Rubro comercioBebi[] ,Rubro comercioParr[],int &contH,int &contPizz,int &contBeb,int &contParr);
+void seguirProcedimiento(Rubro rubro[], int &contH, int codZona);
+void ordenar(Rubro ch[], unsigned t);
+void agregarDatosAlArchivo(Rubro rubro[], int cont, char nomArchivo[35]);
+
 
 int main(){
 
-    FILE *hel;
-	FILE *pizz;
-	FILE *beb;
-	FILE *parr;
+    int contH=0, contPizz=0, contBeb=0, contParr=0;
 
-    //VER EL PROBLEMA DE POR QUE INICIALIZAN LOS ARRAYS CON VALORES
-    Heladeria comercioHela[60];
-    Pizzeria comercioPizz[60];
-    Bebida comercioBebi[60];
-    Parrilla comercioParr[60];
+    Rubro comercioHela[60], comercioPizz[60], comercioBebi[60], comercioParr[60];
 
     limpiar(comercioHela,comercioPizz,comercioBebi,comercioParr);
 
     int opc=0;
 
-    //Consigna 1)-Solo falta ordenar los arrays (comercioHela,comercioPizz,comercioBebi, comercioParr) alfabeticamente por el nombre del los comercios.
     do{
         opc = mostrarMenuRubro();
         if((opc>0)&&(opc<5)){
-            generarAccion(opc, comercioHela, hel, comercioPizz, pizz, comercioBebi, beb, comercioParr, parr);
+            generarAccion(opc, comercioHela, comercioPizz, comercioBebi, comercioParr,contH, contPizz, contBeb, contParr);
         }
     }while((opc>0)&&(opc<5)&&opc!=5);
 
@@ -92,27 +74,30 @@ int main(){
     informarPorZonaComercios(comercioHela,comercioPizz,comercioBebi,comercioParr);
     //3) Informar, si hubo, rubros en los que no se hayan incorporado comercios.
     informarRubrosSinComercios(comercioHela,comercioPizz,comercioBebi,comercioParr);
+    //Funcion que agrega los datos de los arrays hacia los archivos (Heladeria,Pizzeria,Bebida,Parrilla)
+    agregarComerciosArchivos(comercioHela,contH,comercioPizz,contPizz,comercioBebi,contBeb,comercioParr,contParr);
+
     return 0;
 }
 
-void generarAccion(int opc,Heladeria comercioHela[],FILE*hel ,Pizzeria comercioPizz[],FILE*pizz ,Bebida comercioBebi[],FILE*beb ,Parrilla comercioParr[],FILE*parr){
+void generarAccion(int opc,Rubro comercioHela[] ,Rubro comercioPizz[] ,Rubro comercioBebi[] ,Rubro comercioParr[],int &contH,int &contPizz,int &contBeb,int &contParr){
 
     switch(opc){
 
         case 1:
-            agregarComercioHeladeria(comercioHela,hel);
+            agregarComercioHeladeria(comercioHela,contH);
             break;
 
         case 2:
-            agregarComercioPizzeria(comercioPizz,pizz);
+            agregarComercioPizzeria(comercioPizz,contPizz);
             break;
 
         case 3:
-            agregarComercioBebida(comercioBebi,beb);
+            agregarComercioBebida(comercioBebi,contBeb);
             break;
 
         case 4:
-            agregarComercioParrilla(comercioParr,parr);
+            agregarComercioParrilla(comercioParr,contParr);
             break;
     }
 }
@@ -127,435 +112,186 @@ int mostrarMenuRubro(){
         <<"3)Bebida"<<endl
         <<"4)Parrilla"<<endl
         <<"5)Salir"<<endl;
-    cin>>opcion;
+
+    opcion = verificarNum(0,5);
+
     return opcion;
 }
 
 int mostrarMenuZonas(){
     int opcion=0;
 
-    cout<<"Elija la zona que desea ingresar los comercios. || 0 (cero para salir del menu de zonas)"<<endl;
+    cout<<"\nElija la zona que desea ingresar los comercios.(0 cero para salir del menu de zonas)"<<endl;
     cout<<"1)Zona 1"<<endl
         <<"2)Zona 2"<<endl
         <<"3)Zona 3"<<endl
         <<"4)Zona 4"<<endl
         <<"5)Zona 5"<<endl
         <<"6)Zona 6"<<endl;
-    cin>>opcion;
 
-return opcion;
+    opcion = verificarNum(0,6);
+
+    return opcion;
 }
 
-void mostrarRubro(Heladeria comercioHela[],int codZona,int lim){
-
-    for(int i=0; i<lim; i++){
-        if(codZona==comercioHela[i].codZona){
-            cout<<"Nombre Comercio: "<<comercioHela[i].nombreComercio<<" || Zona: "<<comercioHela[i].codZona<<endl;
+int verificarCantComerPorZona(int codZona,Rubro comercioRubro[]){
+    int cont=0;
+        for(int i=0; i<60; i++){
+            if(comercioRubro[i].codZona==codZona){
+                cont++;
+            }
         }
+    return cont;
+}
 
+int contarComercios(Rubro rubro[]){
+    int cont=0;
+
+    for(int i=0;i<60;i++){
+        if(rubro[i].codZona!=0){
+            cont++;
+        }
+    }
+    return cont;
+}
+
+void seguirProcedimiento(Rubro rubro[], int &cont, int codZona){
+
+    int i=0, lim=0, aux, cantComercios;
+    char nombreComercio[30];
+
+    lim = contarComercios(rubro);
+    if(lim<60){
+        i=0;
+        cantComercios = verificarCantComerPorZona(codZona,rubro);
+
+        if(cantComercios<10){
+            cout<<"\n(Escriba 'No' para finalizar.) -- Maximo 10 comercios."<<endl;
+
+                cout<<"Nombre Comercio: "<<endl;
+                fflush(stdin);
+                gets(nombreComercio);
+
+                while((i<10-cantComercios)&&strcmpi(nombreComercio,"no")!=0&&(lim<60)){
+                    if(strcmpi(nombreComercio,"no")!=0){
+                        strcpy(rubro[lim].nombreComercio,nombreComercio);
+                        rubro[lim].codZona = codZona;
+
+                        i++;
+                        lim++;
+                        cont++;
+                    }
+                    cout<<"Nombre Comercio: "<<endl;
+                    fflush(stdin);
+                    gets(nombreComercio);
+                }
+        }else{
+            cout<<"Cantidad de comercios ya alcanzada (10) en la zona: "<<codZona<<endl;
+        }
+    }else{
+            cout<<"Cantidad de 60 comercios ya alcanzada)"<<endl;
     }
 }
-int verificarCantComerPorZonaH(int codZona,Heladeria comercioHela[]){
-    int cont=0;
-        for(int i=0; i<60; i++){
-            if(comercioHela[i].codZona==codZona){
-                cont++;
-            }
-        }
-    return cont;
-}
-int verificarCantComerPorZonaPi(int codZona,Pizzeria comercioPizz[]){
-    int cont=0;
-        for(int i=0; i<60; i++){
-            if(comercioPizz[i].codZona==codZona){
-                cont++;
-            }
-        }
-    return cont;
-}
 
-int verificarCantComerPorZonaBeb(int codZona,Bebida comercioBebida[]){
-    int cont=0;
-        for(int i=0; i<60; i++){
-            if(comercioBebida[i].codZona==codZona){
-                cont++;
-            }
-        }
-    return cont;
-}
+void agregarComercioHeladeria(Rubro comercioHela[],int &contH){
 
-int verificarCantComerPorZonaParr(int codZona,Parrilla comercioParrilla[]){
-    int cont=0;
-        for(int i=0; i<60; i++){
-            if(comercioParrilla[i].codZona==codZona){
-                cont++;
-            }
-        }
-    return cont;
-}
-
-void agregarComercioHeladeria(Heladeria comercioHela[],FILE*hel){
-
-    int i=0, lim=0, aux;
-    int codZona,auxCod;
-    int cantComercios;
-    char nombreComercio[30];
-
-    //Ver si hay alguna manera de verificar si un archivo (por ejemplo, Parrilla.dat) no existe para asi informar al usuario que no existe comercios de ese rubro
-
+    int codZona;
     do{
         codZona = mostrarMenuZonas();
         if(codZona!=0){
-            if(auxCod==codZona){
-                i=0;
-                cantComercios = verificarCantComerPorZonaH(codZona,comercioHela);
-                if(cantComercios<10){
-                    cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioHela[lim].nombreComercio,nombreComercio);
-                                comercioHela[lim].codZona = codZona;
-
-                                hel = fopen("Heladerias.dat", "ab");
-                                    strcpy(regheladeria.nombreComercio, nombreComercio);
-                                    regheladeria.codZona = codZona;
-                                    fwrite(&regheladeria, sizeof(struct Heladeria), 1, hel);
-
-                                fclose(hel);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10-aux&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-                }
-            }else{
-                i=0;
-                cantComercios = verificarCantComerPorZonaH(codZona,comercioHela);
-                if(cantComercios<10){
-                    cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioHela[lim].nombreComercio,nombreComercio);
-                                comercioHela[lim].codZona = codZona;
-
-                                hel = fopen("Heladerias.dat", "ab");
-                                    strcpy(regheladeria.nombreComercio, nombreComercio);
-                                    regheladeria.codZona = codZona;
-                                    fwrite(&regheladeria, sizeof(struct Heladeria), 1, hel);
-
-                                fclose(hel);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-
-                    if(strcmpi(nombreComercio,"no")==0){
-                        aux=i;
-                        auxCod=codZona;
-                    }
-                }else{
-                    cout<<"Cantidad de comercios ya alcanzada del codZona "<<codZona<<endl;
-                }
-            }
+            seguirProcedimiento(comercioHela, contH,codZona);
         }
     }while(codZona!=0);
 
 }
 
-void agregarComercioPizzeria(Pizzeria comercioPizz[],FILE*pizz){
+void agregarComercioPizzeria(Rubro comercioPizz[],int &contPizz){
 
-    int i=0, lim=0, aux;
-    int codZona,auxCod;
-    int cantComercios;
+    int codZona;
     char nombreComercio[30];
-
-    //Ver si hay alguna manera de verificar si un archivo (por ejemplo, Parrilla.dat) no existe para asi informar al usuario que no existe comercios de ese rubro
 
     do{
         codZona = mostrarMenuZonas();
         if(codZona!=0){
-            if(auxCod==codZona){
-                i=0;
-                cantComercios = verificarCantComerPorZonaPi(codZona,comercioPizz);
-                if(cantComercios<10){
-                    cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioPizz[lim].nombreComercio,nombreComercio);
-                                comercioPizz[lim].codZona = codZona;
-
-                                pizz = fopen("Pizzeria.dat", "ab");
-                                    strcpy(regheladeria.nombreComercio, nombreComercio);
-                                    regpizzeria.codZona = codZona;
-                                    fwrite(&regheladeria, sizeof(struct Pizzeria), 1, pizz);
-
-                                fclose(pizz);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10-aux&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-                }
-            }else{
-                i=0;
-                cantComercios = verificarCantComerPorZonaPi(codZona,comercioPizz);
-                if(cantComercios<10){
-                   cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioPizz[lim].nombreComercio,nombreComercio);
-                                comercioPizz[lim].codZona = codZona;
-
-                                pizz = fopen("Pizzeria.dat", "ab");
-                                    strcpy(regpizzeria.nombreComercio, nombreComercio);
-                                    regpizzeria.codZona = codZona;
-                                    fwrite(&regpizzeria, sizeof(struct Pizzeria), 1, pizz);
-
-                                fclose(pizz);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-
-                    if(strcmpi(nombreComercio,"no")==0){
-                        aux=i;
-                        auxCod=codZona;
-                    }
-                }else{
-                    cout<<"Cantidad de comercios ya alcanzada del codZona "<<codZona<<endl;
-                }
-            }
+            seguirProcedimiento(comercioPizz, contPizz,codZona);
         }
     }while(codZona!=0);
 }
 
-void agregarComercioBebida(Bebida comercioBebida[],FILE*beb){
-    int i=0, lim=0, aux;
-    int codZona,auxCod;
-    int cantComercios;
+void agregarComercioBebida(Rubro comercioBebida[],int &contBeb){
+
+    int codZona;
     char nombreComercio[30];
 
-    //Ver si hay alguna manera de verificar si un archivo (por ejemplo, Parrilla.dat) no existe para asi informar al usuario que no existe comercios de ese rubro
     do{
         codZona = mostrarMenuZonas();
         if(codZona!=0){
-            if(auxCod==codZona){
-                i=0;
-                cantComercios = verificarCantComerPorZonaBeb(codZona,comercioBebida);
-                if(cantComercios<10){
-                    cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioBebida[lim].nombreComercio,nombreComercio);
-                                comercioBebida[lim].codZona = codZona;
-
-                                beb = fopen("Bebidas.dat", "ab");
-                                    strcpy(regbebida.nombreComercio, nombreComercio);
-                                    regbebida.codZona = codZona;
-                                    fwrite(&regbebida, sizeof(struct Bebida), 1, beb);
-
-                                fclose(beb);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10-aux&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-                }
-            }else{
-                i=0;
-                cantComercios = verificarCantComerPorZonaBeb(codZona,comercioBebida);
-                if(cantComercios<10){
-                    cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioBebida[lim].nombreComercio,nombreComercio);
-                                comercioBebida[lim].codZona = codZona;
-
-                                beb = fopen("Bebidas.dat", "ab");
-                                    strcpy(regbebida.nombreComercio, nombreComercio);
-                                    regbebida.codZona = codZona;
-                                    fwrite(&regbebida, sizeof(struct Bebida), 1, beb);
-
-                                fclose(beb);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-
-                    if(strcmpi(nombreComercio,"no")==0){
-                        aux=i;
-                        auxCod=codZona;
-                    }
-                }else{
-                    cout<<"Cantidad de comercios ya alcanzada del codZona "<<codZona<<endl;
-                }
-            }
+            seguirProcedimiento(comercioBebida, contBeb,codZona);
         }
     }while(codZona!=0);
 }
 
-void agregarComercioParrilla(Parrilla comercioParrilla[],FILE*parr){
+void agregarComercioParrilla(Rubro comercioParrilla[],int &contParr){
 
-    int i=0, lim=0, aux;
-    int codZona,auxCod;
-    int cantComercios;
+    int codZona;
     char nombreComercio[30];
 
-    //Ver si hay alguna manera de verificar si un archivo (por ejemplo, Parrilla.dat) no existe para asi informar al usuario que no existe comercios de ese rubro
-    parr = fopen("Parrilla.dat", "ab");
     do{
         codZona = mostrarMenuZonas();
         if(codZona!=0){
-            if(auxCod==codZona){
-                i=0;
-                cantComercios = verificarCantComerPorZonaParr(codZona,comercioParrilla);
-                if(cantComercios<10){
-                    cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioParrilla[lim].nombreComercio,nombreComercio);
-                                comercioParrilla[lim].codZona = codZona;
-
-                                parr = fopen("Parrilla.dat", "ab");
-                                    strcpy(regparrilla.nombreComercio, nombreComercio);
-                                    regparrilla.codZona = codZona;
-                                    fwrite(&regparrilla, sizeof(struct Bebida), 1, parr);
-
-                                fclose(parr);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10-aux&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-                }
-            }else{
-                i=0;
-                cantComercios = verificarCantComerPorZonaParr(codZona,comercioParrilla);
-                if(cantComercios<10){
-                    cout<<"(Escriba 'No' para finalizar.)"<<endl;
-                    do{
-                        if(lim<60){
-                            cout<<"Nombre Comercio: "<<endl;
-                            fflush(stdin);
-                            gets(nombreComercio);
-                            //cin>>nombreComercio;
-                            if(strcmpi(nombreComercio,"no")!=0){
-                                strcpy(comercioParrilla[lim].nombreComercio,nombreComercio);
-                                comercioParrilla[lim].codZona = codZona;
-
-                                parr = fopen("Parrilla.dat", "ab");
-                                    strcpy(regparrilla.nombreComercio, nombreComercio);
-                                    regparrilla.codZona = codZona;
-                                    fwrite(&regparrilla, sizeof(struct Bebida), 1, parr);
-
-                                fclose(parr);
-                                i++;
-                                lim++;
-                            }
-                        }
-                    }while(i<10&&strcmpi(nombreComercio,"no")!=0&&lim<60);
-
-                    if(strcmpi(nombreComercio,"no")==0){
-                        aux=i;
-                        auxCod=codZona;
-                    }
-                }else{
-                    cout<<"Cantidad de comercios ya alcanzada (10) del codigo de Zona "<<codZona<<endl;
-                }
-            }
+            seguirProcedimiento(comercioParrilla, contParr,codZona);
         }
     }while(codZona!=0);
 }
 
 //2) Informar por cada zona si hay comercios para todos los rubros.
-void informarPorZonaComercios(Heladeria comercioHela[],Pizzeria comercioPizz[],Bebida comercioBebi[],Parrilla comercioParr[]){
+void informarPorZonaComercios(Rubro comercioHela[],Rubro comercioPizz[],Rubro comercioBebi[],Rubro comercioParr[]){
 
-    int contZonaUno=0,contZonaDos=0,contZonaTres=0,contZonaCuatro=0,contZonaCinco=0,contZonaSeis=0;
+    int contZonaUno=0,contZonaDos=0,contZonaTres=0,contZonaCuatro=0,contZonaCinco=0,contZonaSeis=0, auxContH=0, auxContPizz=0,auxContB=0,auxContPa=0;
 
-    cout<<"CONSIGNA 2"<<endl;
+    cout<<"\nCONSIGNA 2"<<endl;
 
-    for(int i=0; i<60;i++){
-        if((comercioHela[i].codZona==1)||(comercioPizz[i].codZona==1)||(comercioBebi[i].codZona==1)||(comercioParr[i].codZona==1)){
-            contZonaUno++;
-        }
-        if((comercioHela[i].codZona==2)||(comercioPizz[i].codZona==2)||(comercioBebi[i].codZona==2)||(comercioParr[i].codZona==2)){
-            contZonaDos++;
-        }
-        if((comercioHela[i].codZona==3)||(comercioPizz[i].codZona==3)||(comercioBebi[i].codZona==3)||(comercioParr[i].codZona==3)){
-            contZonaTres++;
-        }
-        if((comercioHela[i].codZona==4)||(comercioPizz[i].codZona==4)||(comercioBebi[i].codZona==4)||(comercioParr[i].codZona==4)){
-            contZonaCuatro++;
-        }
-        if((comercioHela[i].codZona==5)||(comercioPizz[i].codZona==5)||(comercioBebi[i].codZona==5)||(comercioParr[i].codZona==5)){
-            contZonaCinco++;
-        }
-        if((comercioHela[i].codZona==6)||(comercioPizz[i].codZona==6)||(comercioBebi[i].codZona==6)||(comercioParr[i].codZona==6)){
-            contZonaSeis++;
-        }
+    for(int i=0; i<6; i++){
+        auxContH = contarComerciosPorZona(comercioHela,i+1);
+        auxContPizz = contarComerciosPorZona(comercioPizz,i+1);
+        auxContB = contarComerciosPorZona(comercioBebi,i+1);
+        auxContPa = contarComerciosPorZona(comercioParr,i+1);
+
+        contZonaUno=auxContH+auxContPizz+auxContB+auxContPa;
+        cout<<"Cant de comercios en Zona "<<(i+1)<<": "<<contZonaUno<<endl;
     }
-    cout<<"Cant de comercios en Zona 1: "<<contZonaUno<<endl;
-    cout<<"Cant de comercios en Zona 2: "<<contZonaDos<<endl;
-    cout<<"Cant de comercios en Zona 3: "<<contZonaTres<<endl;
-    cout<<"Cant de comercios en Zona 4: "<<contZonaCuatro<<endl;
-    cout<<"Cant de comercios en Zona 5: "<<contZonaCinco<<endl;
-    cout<<"Cant de comercios en Zona 6: "<<contZonaSeis<<endl;
+}
+
+int contarComerciosPorZona(Rubro rubro[],int zona){
+
+    int cont=0;
+    for(int i=0; i<60; i++){
+         if(rubro[i].codZona==zona){
+            cont++;
+         }
+    }
+    return cont;
 }
 
 //3) Informar, si hubo, rubros en los que no se hayan incorporado comercios.
-void informarRubrosSinComercios(Heladeria comercioHela[],Pizzeria comercioPizz[],Bebida comercioBebi[],Parrilla comercioParr[]){
+void informarRubrosSinComercios(Rubro comercioHela[],Rubro comercioPizz[],Rubro comercioBebi[],Rubro comercioParr[]){
+
     int contRubroHeladeria=0,contRubroPizzeria=0,contRubroBebida=0,contRubroParrilla=0;
 
-    cout<<"CONSIGNA 3"<<endl;
+    cout<<"\nCONSIGNA 3"<<endl;
     for(int i=0; i<60;i++){
         if(comercioHela[i].codZona>0&&comercioHela[i].codZona<7){
             contRubroHeladeria++;
         }
+
         if(comercioPizz[i].codZona>0&&comercioPizz[i].codZona<7){
             contRubroPizzeria++;
         }
+
         if(comercioBebi[i].codZona>0&&comercioBebi[i].codZona<7){
             contRubroBebida++;
         }
+
         if(comercioParr[i].codZona>0&&comercioParr[i].codZona<7){
             contRubroParrilla++;
         }
@@ -563,10 +299,66 @@ void informarRubrosSinComercios(Heladeria comercioHela[],Pizzeria comercioPizz[]
     cout<<"Rubro: Heladeria || Cant: "<<contRubroHeladeria<<endl
         <<"Rubro: Pizzeria  || Cant: "<<contRubroPizzeria<<endl
         <<"Rubro: Bebidas   || Cant: "<<contRubroBebida<<endl
-        <<"Rubro: Parrilla  || Cant: "<<contRubroParrilla<<endl;
+        <<"Rubro: Parrilla  || Cant: "<<contRubroParrilla<<"\n\n"<<endl;
 }
 
-void limpiar(Heladeria comercioHela[],Pizzeria comercioPizz[],Bebida comercioBebi[], Parrilla comercioParr[]){
+//AGREGACIÓN DE DATOS DE LOS ARRAYS HACIA LOS ARCHIVOS CORRESPONDIENTES
+void agregarComerciosArchivos(Rubro comercioHela[],int contH,Rubro comercioPizz[],int contPizz,Rubro comercioBebi[],int contBeb,Rubro comercioParr[],int contParr){
+
+    if(contH > 0){
+        ordenar(comercioHela, contH);
+        agregarDatosAlArchivo(comercioHela, contH,"Heladerias.dat");
+	}
+
+	if(contPizz > 0){
+		ordenar(comercioPizz, contPizz);
+        agregarDatosAlArchivo(comercioPizz, contPizz,"Pizzeria.dat");
+	}
+
+	if(contBeb > 0){
+    	ordenar(comercioBebi, contBeb);
+        agregarDatosAlArchivo(comercioBebi, contBeb,"Bebidas.dat");
+    }
+
+	if(contParr > 0){
+		ordenar(comercioParr, contParr);
+        agregarDatosAlArchivo(comercioParr, contParr,"Parrilla.dat");
+    }
+}
+
+void agregarDatosAlArchivo(Rubro rubro[], int cont, char nomArchivo[35]){
+
+    FILE * arch;
+
+    for(int i=0; i<cont; i++){
+        	arch = fopen(nomArchivo, "ab");
+                strcpy(regrubro.nombreComercio, rubro[i].nombreComercio);
+                regrubro.codZona = rubro[i].codZona;
+                fwrite(&regrubro, sizeof(struct Rubro), 1, arch);
+        	fclose(arch);
+    	}
+}
+
+void ordenar(Rubro ch[], unsigned t){
+
+	int i = 0, j;
+	Rubro aux;
+
+    for ( i = 0; i < t; i++ ){
+        for ( int j = i + 1; j < t; j++ ){
+
+            if ((strcoll(ch[i].nombreComercio, ch[j].nombreComercio)) > 0) {
+
+                strcpy (aux.nombreComercio, ch[i].nombreComercio);
+                strcpy (ch[i].nombreComercio, ch[j].nombreComercio);
+                strcpy (ch[j].nombreComercio, aux.nombreComercio);
+            }
+        }
+    }
+}
+
+void limpiar(Rubro comercioHela[],Rubro comercioPizz[],Rubro comercioBebi[], Rubro comercioParr[]){
+
 	for(int i=0; i<60; i++){
         comercioHela[i].codZona=0;
         comercioPizz[i].codZona=0;
@@ -577,4 +369,23 @@ void limpiar(Heladeria comercioHela[],Pizzeria comercioPizz[],Bebida comercioBeb
         strcpy(comercioBebi[i].nombreComercio,"");
         strcpy(comercioParr[i].nombreComercio,"");
     }
+}
+
+int verificarNum(int min, int max){
+
+    bool error = false;
+    int num;
+
+    cin>>num;
+    do{
+        error=false;
+
+        if((num<min)||(num>max)){
+            cout<<"Error de rango. Ingrese nuevamente."<<endl;
+            cin>>num;
+            error = true;
+        }
+    }while(error);
+
+    return num;
 }
